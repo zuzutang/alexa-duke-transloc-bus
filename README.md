@@ -1,6 +1,6 @@
 # alexa-duke-transloc-bus
 
-Current functionality: gives you the next 2 buses for Duke's Chapel Drive bus stop. Useful for West Campus residents.
+Current functionality: Alexa skill gives you the next 2 buses for Duke's Chapel Drive bus stop. Useful for West Campus residents.
 
 Upcoming functionality: available for all of Duke's bus stops?
 
