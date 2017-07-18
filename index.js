@@ -76,11 +76,9 @@ var newSessionHandlers = {
         var busTimeArray = [];
         var routeNameArray = [];
         for (var k = 0; k < 2; k++){
-            console.log("@@@@@@@@@@@@@@@@@" + response.data[0].arrivals[k].arrival_at);
             busTimeArray[k] = busHelper.formatTimeString(new Date(response.data[0].arrivals[k].arrival_at));
             routeNameArray[k] = BUSROUTE_IDS[response.data[0].arrivals[k].route_id];
         }
-        console.log(busTimeArray);
         var answer = busHelper.formatBusTimes(busTimeArray, routeNameArray);
         self.emit(':tell', answer);
       } else{

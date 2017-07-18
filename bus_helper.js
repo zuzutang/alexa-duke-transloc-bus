@@ -7,8 +7,7 @@ function BusHelper() { }
 
 BusHelper.prototype.requestTimeData = function(uri) {
   return this.getTranslocData(uri).then(function(response) {
-    console.log(response);
-    console.log("LENGHT ISSSSSSSSSSSSSSSSSSSSS" + response.data.length);
+    //console.log(response);
     return response;
   }).catch(function(error){
     console.log(error);
