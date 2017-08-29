@@ -69,21 +69,54 @@ var newSessionHandlers = {
 
   'BusIntent': function() {
     var busHelper = new BusHelper();
-    var uri = "https://transloc-api-1-2.p.mashape.com/arrival-estimates.json?agencies=176&callback=call&stops=4146366"; // given address, return stop
+    if (self.event.context !== undefined && self.event.context.System.user.permissions !== undefined && self.event.context.System.user.permissions.consentToken !== undefined){
+      var deviceId = self.event.context.System.device.deviceId;
+      var consentToken = self.event.context.System.user.permissions.consentToken;
+    }
+    self.getAmazonAddress(deviceId, consentToken).then(function(response){{
+      console.log(response);
+      // need to figure out what part of response to put into geocode api call
+      /*
+      self.geocodeLocation(location).then(function(response){
+        console.log(response);
+        var lat = response.
+      })
+      */
+    }).catch(err){
+      console.log(err);
+      console.log("error grabbing amazon address");
+    }
+    //test values because google api call not done yet
+    var lat = '36.008119';
+    var long = '-78.914224';
     var self = this;
-    busHelper.requestTimeData(uri).then(function(response){
-      if (response.data.length > 0){
-        var busTimeArray = [];
-        var routeNameArray = [];
-        for (var k = 0; k < 2; k++){
-            busTimeArray[k] = busHelper.formatTimeString(new Date(response.data[0].arrivals[k].arrival_at));
-            routeNameArray[k] = BUSROUTE_IDS[response.data[0].arrivals[k].route_id];
-        }
-        var answer = busHelper.formatBusTimes(busTimeArray, routeNameArray);
-        self.emit(':tell', answer);
-      } else{
-        self.emit(':tell', 'There are no buses.');
+    var uri = "https://transloc-api-1-2.p.mashape.com/stops.json?agencies=12%2C16%2C+20&callback=call&geo_area=" + lat  + "%2C+" + long + "%7C805"; // given address, return stop
+    busHelper.requestStopData(uri).then(function(response){
+      if (stop.data.length == 0){
+        this.emit(':tell', "There are no stops within one mile. For more information, check duke.transloc.com");
+      } else {
+        var minIndex = busHelper.getMinDistance(lat, long, response);
+        var stop = response.data[minIndex].name;
+        var stopID = response.data[minIndex].stop_id;
       }
+      var uri = "https://transloc-api-1-2.p.mashape.com/arrival-estimates.json?agencies=176&callback=call&stops=" + stopID; // stop, return time
+      var self = this;
+      busHelper.requestTimeData(uri).then(function(response){
+        if (response.data.length > 0){
+          var busTimeArray = [];
+          var routeNameArray = [];
+          for (var k = 0; k < 2; k++){
+              busTimeArray[k] = busHelper.formatTimeString(new Date(response.data[0].arrivals[k].arrival_at));
+              routeNameArray[k] = BUSROUTE_IDS[response.data[0].arrivals[k].route_id];
+          }
+          var answer = busHelper.formatBusTimes(busTimeArray, routeNameArray);
+          self.emit(':tell', answer);
+        } else {
+          self.emit(':tell', 'There are no buses.');
+        }
+      }).catch(function(err){
+        console.log(err);
+      });
     }).catch(function(err){
       console.log(err);
     });
@@ -105,4 +138,30 @@ var newSessionHandlers = {
     var prompt = 'I\'m sorry.  I didn\'t catch that.  Can you please repeat the question.';
     this.emit(':ask', prompt, prompt);
   }
+};
+
+function getAmazonAddress(deviceId, consentToken){
+  var options = {
+    url: 'https://api.amazonalexa.com/v1/devices/' + deviceID + '/settings/address/countryAndPostalCode',
+    qs: {}, //Query string data
+    method: 'GET', //Specify the method
+    json: true,
+    simple: false,
+    timeout: 3000,
+    resolveWithFullResponse: true,
+    headers: { //We can define headers too
+      'Authorization': 'Bearer ' + consentToken
+    }
+  };
+  return rp(options);
+};
+
+function geocodeLocation(location){
+  var options = {
+    url: // google maps api
+    json: true,
+    simple: false,
+    resolveWithFullResponse: true
+  }
+  return rp(options);
 };
